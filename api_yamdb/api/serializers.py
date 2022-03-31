@@ -6,15 +6,15 @@ from reviews.models import Comment, Review
 class ReviewSerializer(serializers.ModelSerializer):
     title = serializers.SlugRelatedField(
         slug_field='name',
-        read_only=True,
+        read_only=True
     )
     author = serializers.SlugRelatedField(
         read_only=True, slug_field='username'
     )
 # почитать, нужна ли валидация
     class Meta:
-        fields = '__all__'
         model = Review
+        fields = '__all__'
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -29,4 +29,3 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = '__all__'
-        
