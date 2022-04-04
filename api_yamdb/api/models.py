@@ -4,7 +4,7 @@ from django.contrib.auth.models import (
 )
 from django.db import models
 from django.db.models import UniqueConstraint
-
+import jwt
 
 class User(AbstractUser):
     username = models.CharField(max_length=150, blank=True, unique=True, null=True)
@@ -15,7 +15,7 @@ class User(AbstractUser):
     role = models.TextField(choices=settings.ROLE_CHOICES,
                             default='user',
                             blank=True,
-                            null=True)
+                            null=False)
     confirmation_code = models.TextField()
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email']

@@ -35,3 +35,12 @@ class CustomJWTSerializer(TokenObtainPairSerializer):
         if user is None or attrs['username'] != user.username:
             raise ValidationError('Пользователь с указанными данными не найден')
         return attrs
+
+
+class UsersSerializer(serializers.ModelSerializer):
+    count = serializers.IntegerField(read_only=True)
+    role = serializers.CharField(default='user')
+
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'first_name', 'last_name', 'bio', 'role', 'count']
