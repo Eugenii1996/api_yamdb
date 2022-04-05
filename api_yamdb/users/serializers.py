@@ -1,9 +1,7 @@
-from django.shortcuts import get_object_or_404
-from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from django.contrib.auth.tokens import default_token_generator
 
 User = get_user_model()
 
@@ -38,9 +36,12 @@ class CustomJWTSerializer(TokenObtainPairSerializer):
 
 
 class UsersSerializer(serializers.ModelSerializer):
-    count = serializers.IntegerField(read_only=True)
+    """Сериализатор для auth, users"""
+
     role = serializers.CharField(default='user')
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'first_name', 'last_name', 'bio', 'role', 'count']
+        fields = ['username', 'email', 'first_name', 'last_name', 'bio', 'role']
+
+

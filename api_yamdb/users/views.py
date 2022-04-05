@@ -1,15 +1,16 @@
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
-from rest_framework import mixins, permissions, status, viewsets, filters
+from rest_framework import filters, mixins, permissions, status, viewsets
+from rest_framework.authtoken.models import Token
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import AccessToken
-from rest_framework.authtoken.models import Token
-from rest_framework.pagination import PageNumberPagination
 
-from .serializers import RegisterUserSerializer, CustomJWTSerializer, UsersSerializer
-from .permissions import IsAdmin
+from .permissions import IsAdmin, IsOwner
+from .serializers import (CustomJWTSerializer, RegisterUserSerializer,
+                          UsersSerializer)
 
 User = get_user_model()
 
@@ -65,6 +66,7 @@ class UsersViewSet(viewsets.ModelViewSet):
     pagination_class = PageNumberPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
+    lookup_field = 'username'
 
     def create(self, request, *args, **kwargs):
         user = request.data
@@ -82,3 +84,23 @@ class UsersViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
+class UsersMeAPIView(APIView):
+    """Обработка эндпоинта users/me/"""
+
+    permission_classes = (IsOwner,)
+
+    def get(self, request):
+        user = get_object_or_404(User,
+                                 username=request.user.username)
+        serializer = UsersSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def patch(self, request):
+        user = get_object_or_404(User,
+                                 username=request.user.username)
+        serializer = UsersSerializer(user,
+                                     data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
