@@ -1,11 +1,20 @@
-from rest_framework import permissions
+from rest_framework.permissions import SAFE_METHODS, BasePermission
 
-
-class IsOwnerOrReadOnly(permissions.BasePermission):
+class IsOwnerOrReadOnly(BasePermission):
     message = 'Изменение чужого контента запрещено!'
 
     def has_object_permission(self, request, view, obj):
         return (
-            request.method in permissions.SAFE_METHODS
+            request.method in SAFE_METHODS
             or obj.author == request.user
+        )
+
+
+class AdminOrReadOnly(BasePermission):
+    message = 'Изменение доступно только администратору!'
+
+    def has_permission(self, request, view):
+        return (
+            request.method in SAFE_METHODS
+            or request.user.role == 'admin'
         )

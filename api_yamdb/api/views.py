@@ -1,12 +1,12 @@
+<<<<<<< HEAD
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
-
 from reviews.models import Comment, Review, Title
-from .permissions import IsOwnerOrReadOnly
 
-from .serializers import (CommentSerializer, ReviewSerializer)
+from .permissions import IsOwnerOrReadOnly
+from .serializers import CommentSerializer, ReviewSerializer
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -37,3 +37,43 @@ class CommentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
         #требуется доработка
+=======
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, viewsets
+from rest_framework.pagination import LimitOffsetPagination
+from reviews.models import Category, Genre, Title
+
+from .permissions import AdminOrReadOnly
+from .serializers import CategorySerializer, GenreSerializer
+
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = (AdminOrReadOnly,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
+
+    def perform_destroy(self, instance):
+        instance.delete(id=self.kwargs.get('slug'))
+
+
+class GenreViewSet(viewsets.ModelViewSet):
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
+    permission_classes = (AdminOrReadOnly,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
+
+    def perform_destroy(self, instance):
+        instance.delete(id=self.kwargs.get('slug'))
+
+
+class TitleViewSet(viewsets.ModelViewSet):
+    queryset = Title.objects.all()
+    serializer_class = GenreSerializer
+    permission_classes = (AdminOrReadOnly,)
+    filter_backends = (DjangoFilterBackend,)
+    pagination_class = LimitOffsetPagination
+    filterset_fields = ('category__slug', 'genre__slug', 'name', 'year')
+>>>>>>> 21b5c61d1cc1f1f2e5669d7408666386dc86e096
