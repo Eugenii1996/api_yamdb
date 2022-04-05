@@ -1,7 +1,6 @@
 from rest_framework import serializers, validators
-from reviews.models import (
-    Category, Genre, Title, TitlesGenres, Comment, Review
-)
+from reviews.models import (Category, Comment, Genre, Review, Title,
+                            TitlesGenres)
 
 
 class CategorySerializer(serializers.ModelSerializer):
