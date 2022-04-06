@@ -1,3 +1,5 @@
+from itertools import count
+from statistics import mean
 from rest_framework import serializers, validators
 from reviews.models import (
     Category, Genre, Title, TitlesGenres, Comment, Review
@@ -19,6 +21,7 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class TitleSerializer(serializers.ModelSerializer):
+    rating = serializers.SerializerMethodField()
 
     class Meta:
         model = Title
@@ -29,6 +32,9 @@ class TitleSerializer(serializers.ModelSerializer):
                 fields=('title', 'genre')
             )
         ]
+
+    def get_rating(self, obj):
+        return int(mean(Review.objects.filter(title=obj.title)))
 
     def validate_genre(self, value):
         if self.context['request'].genre == value:

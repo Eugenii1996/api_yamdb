@@ -31,7 +31,7 @@ router_v1.register(
 )
 
 urlpatterns = [
-    path('users/me/', UsersMeAPIView.as_view()),
-    path('auth/token/', GetTokenAPIView.as_view()),
-    path('', include(router_v1.urls)),
+    path('v1/users/me/', UsersMeAPIView.as_view()),
+    path('v1/auth/token/', GetTokenAPIView.as_view()),
+    path('v1/', include(router_v1.urls)),
 ]

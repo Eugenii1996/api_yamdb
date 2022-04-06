@@ -1,12 +1,15 @@
-<<<<<<< HEAD
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets
+from rest_framework import filters, viewsets
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
-from reviews.models import Comment, Review, Title
+from django_filters.rest_framework import DjangoFilterBackend
 
-from .permissions import IsOwnerOrReadOnly
-from .serializers import CommentSerializer, ReviewSerializer
+from .permissions import AdminOrReadOnly, IsOwnerOrReadOnly
+from .serializers import (
+    CategorySerializer, CommentSerializer,
+    GenreSerializer, ReviewSerializer, TitleSerializer
+)
+from reviews.models import Category, Genre, Comment, Review, Title
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -37,14 +40,6 @@ class CommentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
         #требуется доработка
-=======
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, viewsets
-from rest_framework.pagination import LimitOffsetPagination
-from reviews.models import Category, Genre, Title
-
-from .permissions import AdminOrReadOnly
-from .serializers import CategorySerializer, GenreSerializer
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -71,9 +66,8 @@ class GenreViewSet(viewsets.ModelViewSet):
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
-    serializer_class = GenreSerializer
+    serializer_class = TitleSerializer
     permission_classes = (AdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     pagination_class = LimitOffsetPagination
     filterset_fields = ('category__slug', 'genre__slug', 'name', 'year')
->>>>>>> 21b5c61d1cc1f1f2e5669d7408666386dc86e096
