@@ -10,11 +10,6 @@ class IsOwnerOrReadOnly(BasePermission):
         )
 
 
-class AdminOrReadOnly(BasePermission):
-    message = 'Изменение доступно только администратору!'
-
+class ReadOnly(BasePermission):
     def has_permission(self, request, view):
-        return (
-            request.method in SAFE_METHODS
-            or request.user.role == 'admin'
-        )
+        return request.method in SAFE_METHODS

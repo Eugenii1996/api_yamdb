@@ -1,10 +1,10 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import filters, viewsets
 from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAdminUser
 from django_filters.rest_framework import DjangoFilterBackend
 
-from .permissions import AdminOrReadOnly, IsOwnerOrReadOnly
+from .permissions import ReadOnly, IsOwnerOrReadOnly
 from .serializers import (
     CategorySerializer, CommentSerializer,
     GenreSerializer, ReviewSerializer, TitleSerializer
@@ -45,7 +45,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = (AdminOrReadOnly,)
+    permission_classes = [ReadOnly|IsAdminUser]
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
 
@@ -56,7 +56,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
 class GenreViewSet(viewsets.ModelViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = (AdminOrReadOnly,)
+    permission_classes = [ReadOnly|IsAdminUser]
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
 
@@ -67,7 +67,7 @@ class GenreViewSet(viewsets.ModelViewSet):
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
-    permission_classes = (AdminOrReadOnly,)
+    permission_classes = [IsAuthenticatedOrReadOnly,]
     filter_backends = (DjangoFilterBackend,)
     pagination_class = LimitOffsetPagination
     filterset_fields = ('category__slug', 'genre__slug', 'name', 'year')
