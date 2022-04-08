@@ -12,4 +12,11 @@ class IsOwnerOrReadOnly(BasePermission):
 
 class ReadOnly(BasePermission):
     def has_permission(self, request, view):
-        return request.method in SAFE_METHODS
+        user = request.user
+        if user.username == '':
+            return request.method in SAFE_METHODS
+        return (
+            request.method in SAFE_METHODS
+            or user.role == 'admin'
+            or user.is_superuser
+        )

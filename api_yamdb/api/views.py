@@ -46,33 +46,31 @@ class CommentViewSet(viewsets.ModelViewSet):
 class CategoryViewSet(CreateGetDeleteViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = [ReadOnly|IsAdminUser]
+    permission_classes = (ReadOnly,)
     pagination_class = LimitOffsetPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
 
     def perform_destroy(self, instance):
-        category = Category.objects.get(slug=self.kwargs.get('slug'))
-        instance.delete(id=category.id)
+        instance.delete(slug=self.kwargs.get('slug'))
 
 
 class GenreViewSet(CreateGetDeleteViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = [ReadOnly|IsAdminUser]
+    permission_classes = (ReadOnly,)
     pagination_class = LimitOffsetPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
 
     def perform_destroy(self, instance):
-        genre = Genre.objects.get(slug=self.kwargs.get('slug'))
-        instance.delete(id=genre.id)
+        instance.delete(slug=self.kwargs.get('slug'))
 
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
-    permission_classes = [ReadOnly|IsAdminUser]
+    permission_classes = (ReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     pagination_class = LimitOffsetPagination
     filterset_fields = ('category__slug', 'genre__slug', 'name', 'year')

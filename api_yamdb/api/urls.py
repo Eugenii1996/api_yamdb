@@ -20,7 +20,7 @@ router_v1.register('titles', TitleViewSet, basename='titles')
 router_v1.register('auth/signup', RegisterUserViewSet)
 router_v1.register('users', UsersViewSet)
 router_v1.register(
-    r'titles/(?P<title_id>\\d+)/reviews', 
+    r'titles/(?P<title_id>\d+)/reviews', 
     ReviewViewSet,
     basename='reviews'
 )
