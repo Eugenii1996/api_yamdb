@@ -7,10 +7,10 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import AccessToken
-
+from django.http.request import QueryDict
 from .permissions import IsAdmin, IsOwner
 from .serializers import (CustomJWTSerializer, RegisterUserSerializer,
-                          UsersSerializer)
+                          UsersSerializer, UsersMeSerializer)
 
 User = get_user_model()
 
@@ -23,19 +23,23 @@ class RegisterUserViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
     serializer_class = RegisterUserSerializer
 
     def create(self, request, *args, **kwargs):
-        user = request.data
-        serializer = self.serializer_class(data=user)
+        if isinstance(request.data, QueryDict):
+            data = request.data.dict()
+        else:
+            data = request.data
+        serializer = self.serializer_class(data=data)
         serializer.is_valid(raise_exception=True)
         confirmation_code = Token.generate_key()
         send_mail(
             subject='Confirmation code',
             message=f'Your confirmation code {confirmation_code}',
             from_email='confirmationcode@mail.ru',
-            recipient_list=['user@mail.ru']
+            recipient_list=[data['email']]
         )
-        User.objects.update_or_create(user,
-                                      confirmation_code=confirmation_code)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        User.objects.create(confirmation_code=confirmation_code,
+                            **data)
+        print(User.objects.filter(email=data['email']))
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class GetTokenAPIView(APIView):
@@ -61,45 +65,31 @@ class UsersViewSet(viewsets.ModelViewSet):
     """Вьюсет для эндпоинта /users/"""
 
     queryset = User.objects.all()
-    permission_classes = (IsAdmin,)
+    permission_classes = (permissions.IsAuthenticated, IsAdmin,)
     serializer_class = UsersSerializer
     pagination_class = PageNumberPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
     lookup_field = 'username'
 
-    def create(self, request, *args, **kwargs):
-        user = request.data
-        serializer = self.serializer_class(data=user)
-        serializer.is_valid(raise_exception=True)
-        confirmation_code = Token.generate_key()
-        send_mail(
-            subject='Confirmation code',
-            message=f'Your confirmation code {confirmation_code}',
-            from_email='confirmationcode@mail.ru',
-            recipient_list=['user@mail.ru']
-        )
-        User.objects.update_or_create(user,
-                                      confirmation_code=confirmation_code)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
 
 class UsersMeAPIView(APIView):
     """Обработка эндпоинта users/me/"""
 
-    permission_classes = (IsOwner,)
+    permission_classes = (permissions.IsAuthenticated, IsOwner,)
 
     def get(self, request):
         user = get_object_or_404(User,
                                  username=request.user.username)
-        serializer = UsersSerializer(user)
+        serializer = UsersMeSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def patch(self, request):
         user = get_object_or_404(User,
                                  username=request.user.username)
-        serializer = UsersSerializer(user,
-                                     data=request.data)
+        serializer = UsersMeSerializer(user,
+                                       data=request.data,
+                                       partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
