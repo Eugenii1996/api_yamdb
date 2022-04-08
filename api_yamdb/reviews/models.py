@@ -30,15 +30,15 @@ class Genre(models.Model):
 class Title(models.Model):
     name = models.TextField()
     year = models.IntegerField()
-    description = models.TextField()
+    description = models.TextField(blank=True, null=True)
     genre = models.ManyToManyField(
         Genre,
-        through='TitlesGenres',
+        through='GenreTitle',
         through_fields=('title', 'genre'),
     )
     category = models.ForeignKey(
         Category, on_delete=models.SET_NULL,
-        related_name="category", blank=True, null=True
+        related_name="titles", blank=True, null=True
     )
 
     class Meta:
@@ -50,16 +50,16 @@ class Title(models.Model):
         return self.name[:15]
 
 
-class TitlesGenres(models.Model):
+class GenreTitle(models.Model):
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
-        related_name="title"
+        related_name="genres_titles"
     )
     genre = models.ForeignKey(
         Genre,
         on_delete=models.SET_NULL,
-        related_name="genre",
+        related_name="genres_titles",
         blank=True,
         null=True
     )

@@ -4,10 +4,11 @@ from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAdminUser
 from django_filters.rest_framework import DjangoFilterBackend
 
+from .viewsets import CreateGetDeleteViewSet
 from .permissions import ReadOnly, IsOwnerOrReadOnly
 from .serializers import (
     CategorySerializer, CommentSerializer,
-    GenreSerializer, ReviewSerializer, TitleSerializer
+    GenreSerializer, ReviewSerializer, TitleSerializer, TitleListSerializer
 )
 from reviews.models import Category, Genre, Comment, Review, Title
 
@@ -42,32 +43,44 @@ class CommentViewSet(viewsets.ModelViewSet):
         #требуется доработка
 
 
-class CategoryViewSet(viewsets.ModelViewSet):
+class CategoryViewSet(CreateGetDeleteViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [ReadOnly|IsAdminUser]
+    pagination_class = LimitOffsetPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
 
     def perform_destroy(self, instance):
-        instance.delete(id=self.kwargs.get('slug'))
+        category = Category.objects.get(slug=self.kwargs.get('slug'))
+        instance.delete(id=category.id)
 
 
-class GenreViewSet(viewsets.ModelViewSet):
+class GenreViewSet(CreateGetDeleteViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     permission_classes = [ReadOnly|IsAdminUser]
+    pagination_class = LimitOffsetPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
 
     def perform_destroy(self, instance):
-        instance.delete(id=self.kwargs.get('slug'))
+        genre = Genre.objects.get(slug=self.kwargs.get('slug'))
+        instance.delete(id=genre.id)
 
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly,]
+    permission_classes = [ReadOnly|IsAdminUser]
     filter_backends = (DjangoFilterBackend,)
     pagination_class = LimitOffsetPagination
     filterset_fields = ('category__slug', 'genre__slug', 'name', 'year')
+
+    def get_serializer_class(self):
+        if self.action == 'list' or self.action == 'retrieve':
+            return TitleListSerializer
+        return TitleSerializer
+
+    def perform_destroy(self, instance):
+        instance.delete(id=self.kwargs.get('titles_id'))

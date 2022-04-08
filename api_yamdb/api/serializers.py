@@ -1,8 +1,8 @@
-from itertools import count
-from statistics import mean
+import datetime as dt
 from rest_framework import serializers, validators
+
 from reviews.models import (
-    Category, Genre, Title, TitlesGenres, Comment, Review
+    Category, Genre, Title, GenreTitle, Comment, Review
 )
 
 
@@ -10,36 +10,58 @@ class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Category
-        fields = '__all__'
+        fields = ('name', 'slug')
 
 
 class GenreSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Genre
-        fields = '__all__'
+        fields = ('name', 'slug')
 
 
-class TitleSerializer(serializers.ModelSerializer):
+class TitleListSerializer(serializers.ModelSerializer):
     rating = serializers.SerializerMethodField()
+    genre = GenreSerializer(read_only=True, many=True)
+    category = CategorySerializer(read_only=True)
 
     class Meta:
         model = Title
         fields = '__all__'
         validators = [
             validators.UniqueTogetherValidator(
-                queryset=TitlesGenres.objects.all(),
+                queryset=GenreTitle.objects.all(),
                 fields=('title', 'genre')
             )
         ]
 
     def get_rating(self, obj):
-        return int(mean(Review.objects.filter(title=obj.title)))
+        review = Review.objects.filter(title_id=obj.id)
+        sum_rating = 0
+        review_count = len(review)
+        for i in review:
+            sum_rating += i.rating
+        return int(sum_rating/review_count)
+
+
+class TitleSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Title
+        fields = ('name', 'year', 'description', 'genre', 'category')
 
     def validate_genre(self, value):
         if self.context['request'].genre == value:
             raise serializers.ValidationError(
                 'Данный жанр уже выбран!')
+        return value
+    
+    def validate_year(self, value):
+        year = dt.date.today().year
+        if year < value:
+            raise serializers.ValidationError(
+                'Год создания произведения указан в будущем!'
+            )
         return value
 
 
