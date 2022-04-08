@@ -29,3 +29,4 @@ class User(AbstractUser):
     class Meta:
         constraints = [UniqueConstraint(fields=['username', 'email'],
                                         name='unique_booking')]
+        ordering = ['id']
