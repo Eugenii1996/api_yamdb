@@ -5,11 +5,16 @@ from django.db.models import UniqueConstraint
 
 
 class User(AbstractUser):
-    username = models.CharField(max_length=150, blank=True, unique=True, null=True)
-    email = models.EmailField(unique=True)
-    first_name = models.CharField(max_length=150)
-    last_name = models.CharField(max_length=150)
-    bio = models.TextField()
+    username = models.CharField(max_length=150, unique=True, )
+    email = models.EmailField(unique=True, max_length=254)
+    first_name = models.CharField(max_length=150,
+                                  blank=True,
+                                  null=True)
+    last_name = models.CharField(max_length=150,
+                                 blank=True,
+                                 null=True)
+    bio = models.TextField(blank=True,
+                           null=True)
     role = models.TextField(choices=settings.ROLE_CHOICES,
                             default='user',
                             blank=True,

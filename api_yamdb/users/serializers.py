@@ -1,7 +1,8 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.conf import settings
 
 User = get_user_model()
 
@@ -29,19 +30,34 @@ class CustomJWTSerializer(TokenObtainPairSerializer):
         self.fields['confirmation_code'] = serializers.CharField()
 
     def validate(self, attrs):
-        user = User.objects.filter(confirmation_code=attrs['confirmation_code']).first()
-        if user is None or attrs['username'] != user.username:
-            raise ValidationError('Пользователь с указанными данными не найден')
+        user = User.objects.filter(username=attrs['username']).first()
+        if user is None:
+            raise NotFound('Пользователь с указанным username не существует')
+        if attrs['confirmation_code'] != user.confirmation_code:
+            raise ValidationError('Код недействителен для этого username')
         return attrs
 
 
 class UsersSerializer(serializers.ModelSerializer):
     """Сериализатор для auth, users"""
 
-    role = serializers.CharField(default='user')
+    role = serializers.ChoiceField(choices=settings.ROLE_CHOICES,
+                                   default='user')
+    first_name = serializers.CharField(required=False)
+    last_name = serializers.CharField(required=False)
+    bio = serializers.CharField(required=False)
 
     class Meta:
         model = User
         fields = ['username', 'email', 'first_name', 'last_name', 'bio', 'role']
 
 
+class UsersMeSerializer(serializers.ModelSerializer):
+    role = serializers.CharField(read_only=True)
+    first_name = serializers.CharField(required=False)
+    last_name = serializers.CharField(required=False)
+    bio = serializers.CharField(required=False)
+
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'first_name', 'last_name', 'bio', 'role']
