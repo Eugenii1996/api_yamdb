@@ -1,16 +1,22 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import filters, viewsets
 from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAdminUser
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from django_filters.rest_framework import DjangoFilterBackend
 
 from .viewsets import CreateGetDeleteViewSet
-from .permissions import ReadOnly, IsOwnerOrReadOnly
+from .permissions import AdminOrReadOnly, IsOwnerOrReadOnly
 from .serializers import (
     CategorySerializer, CommentSerializer,
     GenreSerializer, ReviewSerializer, TitleSerializer, TitleListSerializer
 )
 from reviews.models import Category, Genre, Comment, Review, Title
+
+import django_filters
+
+
+
+
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -46,39 +52,43 @@ class CommentViewSet(viewsets.ModelViewSet):
 class CategoryViewSet(CreateGetDeleteViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = (ReadOnly,)
+    permission_classes = (AdminOrReadOnly,)
     pagination_class = LimitOffsetPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
-
-    def perform_destroy(self, instance):
-        instance.delete(slug=self.kwargs.get('slug'))
+    lookup_field = 'slug'
 
 
 class GenreViewSet(CreateGetDeleteViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = (ReadOnly,)
+    permission_classes = (AdminOrReadOnly,)
     pagination_class = LimitOffsetPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
+    lookup_field = 'slug'
 
-    def perform_destroy(self, instance):
-        instance.delete(slug=self.kwargs.get('slug'))
+
+class TitleFilter(django_filters.FilterSet):
+    category = django_filters.CharFilter(field_name='category__slug')
+    genre = django_filters.CharFilter(field_name='genre__slug')
+    name = django_filters.CharFilter(field_name='name', lookup_expr='contains')
+    year = django_filters.NumberFilter(field_name='year')
+    
+    class Meta:
+        model = Title
+        fields = ['category', 'genre', 'name', 'year']
 
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
-    permission_classes = (ReadOnly,)
+    permission_classes = (AdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     pagination_class = LimitOffsetPagination
-    filterset_fields = ('category__slug', 'genre__slug', 'name', 'year')
+    filterset_class = TitleFilter
 
     def get_serializer_class(self):
         if self.action == 'list' or self.action == 'retrieve':
             return TitleListSerializer
         return TitleSerializer
-
-    def perform_destroy(self, instance):
-        instance.delete(id=self.kwargs.get('titles_id'))

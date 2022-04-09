@@ -10,7 +10,7 @@ class IsOwnerOrReadOnly(BasePermission):
         )
 
 
-class ReadOnly(BasePermission):
+class AdminOrReadOnly(BasePermission):
     def has_permission(self, request, view):
         user = request.user
         if user.username == '':

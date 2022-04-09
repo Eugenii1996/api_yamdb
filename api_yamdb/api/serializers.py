@@ -1,8 +1,8 @@
 import datetime as dt
-from rest_framework import serializers, validators
+from rest_framework import serializers
 
 from reviews.models import (
-    Category, Genre, Title, GenreTitle, Comment, Review
+    Category, Genre, Title, Comment, Review
 )
 
 
@@ -28,12 +28,6 @@ class TitleListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Title
         fields = '__all__'
-        validators = [
-            validators.UniqueTogetherValidator(
-                queryset=GenreTitle.objects.all(),
-                fields=('title', 'genre')
-            )
-        ]
 
     def get_rating(self, obj):
         review = Review.objects.filter(title_id=obj.id)
@@ -41,20 +35,36 @@ class TitleListSerializer(serializers.ModelSerializer):
         review_count = len(review)
         for i in review:
             sum_rating += i.rating
+        if review_count == 0:
+            return None
         return int(sum_rating/review_count)
 
 
 class TitleSerializer(serializers.ModelSerializer):
+    rating = serializers.SerializerMethodField()
+    genre = serializers.SlugRelatedField(
+        slug_field='slug',
+        queryset=Genre.objects.all(),
+        many=True
+    )
+    category = serializers.SlugRelatedField(
+        slug_field='slug',
+        queryset=Category.objects.all()
+    )
 
     class Meta:
         model = Title
-        fields = ('name', 'year', 'description', 'genre', 'category')
+        fields = '__all__'
 
-    def validate_genre(self, value):
-        if self.context['request'].genre == value:
-            raise serializers.ValidationError(
-                'Данный жанр уже выбран!')
-        return value
+    def get_rating(self, obj):
+        review = Review.objects.filter(title_id=obj.id)
+        sum_rating = 0
+        review_count = len(review)
+        for i in review:
+            sum_rating += i.rating
+        if review_count == 0:
+            return None
+        return int(sum_rating/review_count)
     
     def validate_year(self, value):
         year = dt.date.today().year

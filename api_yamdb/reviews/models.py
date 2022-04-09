@@ -31,11 +31,7 @@ class Title(models.Model):
     name = models.TextField()
     year = models.IntegerField()
     description = models.TextField(blank=True, null=True)
-    genre = models.ManyToManyField(
-        Genre,
-        through='GenreTitle',
-        through_fields=('title', 'genre'),
-    )
+    genre = models.ManyToManyField(Genre, related_name="titles")
     category = models.ForeignKey(
         Category, on_delete=models.SET_NULL,
         related_name="titles", blank=True, null=True
@@ -48,32 +44,6 @@ class Title(models.Model):
 
     def __str__(self):
         return self.name[:15]
-
-
-class GenreTitle(models.Model):
-    title = models.ForeignKey(
-        Title,
-        on_delete=models.CASCADE,
-        related_name="genres_titles"
-    )
-    genre = models.ForeignKey(
-        Genre,
-        on_delete=models.SET_NULL,
-        related_name="genres_titles",
-        blank=True,
-        null=True
-    )
-
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=['title', 'genre'],
-                name='unique_title_genre'
-            )
-        ]
-
-    def __str__(self):
-        return self.title
 
 
 class Review(models.Model):
