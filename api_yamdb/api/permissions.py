@@ -1,5 +1,6 @@
 from rest_framework.permissions import SAFE_METHODS, BasePermission
 
+
 class IsOwnerOrReadOnly(BasePermission):
     message = 'Изменение чужого контента запрещено!'
 

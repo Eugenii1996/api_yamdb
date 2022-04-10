@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
+from django.http.request import QueryDict
 from django.shortcuts import get_object_or_404
 from rest_framework import filters, mixins, permissions, status, viewsets
 from rest_framework.authtoken.models import Token
@@ -7,10 +8,10 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import AccessToken
-from django.http.request import QueryDict
+
 from .permissions import IsAdmin, IsOwner
 from .serializers import (CustomJWTSerializer, RegisterUserSerializer,
-                          UsersSerializer, UsersMeSerializer)
+                          UsersMeSerializer, UsersSerializer)
 
 User = get_user_model()
 
