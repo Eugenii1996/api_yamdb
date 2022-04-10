@@ -34,7 +34,7 @@ class TitleListSerializer(serializers.ModelSerializer):
         sum_rating = 0
         review_count = len(review)
         for i in review:
-            sum_rating += i.rating
+            sum_rating += i.score
         if review_count == 0:
             return None
         return int(sum_rating/review_count)
@@ -61,7 +61,7 @@ class TitleSerializer(serializers.ModelSerializer):
         sum_rating = 0
         review_count = len(review)
         for i in review:
-            sum_rating += i.rating
+            sum_rating += i.score
         if review_count == 0:
             return None
         return int(sum_rating/review_count)

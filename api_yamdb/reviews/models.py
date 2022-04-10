@@ -61,10 +61,16 @@ class Review(models.Model):
     text = models.TextField()
     pub_date = models.DateTimeField(
         'Дата добавления', auto_now_add=True, db_index=True)
-    rating = models.IntegerField(default=0, null=True, blank=True)
+    score = models.IntegerField(default=0, null=True, blank=True)
 
     class Meta:
         ordering = ['pub_date']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['author', 'title'],
+                name='unique_author_title'
+            )
+        ]
 
 
 class Comment(models.Model):
