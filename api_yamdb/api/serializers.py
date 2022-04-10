@@ -37,7 +37,7 @@ class TitleListSerializer(serializers.ModelSerializer):
             sum_rating += i.score
         if review_count == 0:
             return None
-        return int(sum_rating/review_count)
+        return int(sum_rating / review_count)
 
 
 class TitleSerializer(serializers.ModelSerializer):
@@ -64,8 +64,8 @@ class TitleSerializer(serializers.ModelSerializer):
             sum_rating += i.score
         if review_count == 0:
             return None
-        return int(sum_rating/review_count)
-    
+        return int(sum_rating / review_count)
+
     def validate_year(self, value):
         year = dt.date.today().year
         if year < value:
