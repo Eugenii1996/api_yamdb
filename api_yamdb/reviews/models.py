@@ -50,8 +50,8 @@ class ReviewComment(models.Model):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name = '%(class)ss',
-        related_query_name='%(class)s'        
+        related_name='%(class)ss',
+        related_query_name='%(class)s'
     )
     text = models.TextField()
     pub_date = models.DateTimeField(
@@ -59,8 +59,8 @@ class ReviewComment(models.Model):
 
     class Meta:
         abstract = True
-         
-    
+
+
 class Review(ReviewComment):
     title = models.ForeignKey(
         Title,
@@ -69,15 +69,15 @@ class Review(ReviewComment):
         verbose_name='Произведение'
     )
     score = models.IntegerField(
-        default=0, 
-        null=True, 
+        default=0,
+        null=True,
         blank=True,
         validators=(
             MinValueValidator(1),
             MaxValueValidator(10)
         ),
         error_messages={'validators': 'Оценка от 1 до 10!'}
-        )
+    )
 
     class Meta:
         constraints = [
@@ -86,12 +86,11 @@ class Review(ReviewComment):
                 name='unique_author_title'
             )
         ]
-    
+
 
 class Comment(ReviewComment):
     review = models.ForeignKey(
         Review, on_delete=models.CASCADE, related_name='comments')
-    
+
     class Meta:
         ordering = ['pub_date']
-    
