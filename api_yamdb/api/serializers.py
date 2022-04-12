@@ -1,9 +1,8 @@
-import datetime as dt
-
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from reviews.models import Category, Comment, Genre, Review, Title
+from django.db.models import Avg
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -27,17 +26,18 @@ class TitleListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Title
-        fields = '__all__'
+        fields = (
+            'id', 'name', 'year', 'rating',
+            'description', 'genre', 'category'
+        )
+        read_only_fields = (
+            'id', 'name', 'year', 'rating', 'description'
+        )
 
     def get_rating(self, obj):
-        review = Review.objects.filter(title_id=obj.id)
-        sum_rating = 0
-        review_count = len(review)
-        for i in review:
-            sum_rating += i.score
-        if review_count == 0:
-            return None
-        return int(sum_rating / review_count)
+        return Review.objects.filter(
+            title_id=obj.id
+        ).aggregate(Avg('score'))['score__avg']
 
 
 class TitleSerializer(serializers.ModelSerializer):
@@ -54,7 +54,10 @@ class TitleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Title
-        fields = '__all__'
+        fields = (
+            'id', 'name', 'year', 'rating',
+            'description', 'genre', 'category'
+        )
 
     def get_rating(self, obj):
         review = Review.objects.filter(title_id=obj.id)
@@ -65,14 +68,6 @@ class TitleSerializer(serializers.ModelSerializer):
         if review_count == 0:
             return None
         return int(sum_rating / review_count)
-
-    def validate_year(self, value):
-        year = dt.date.today().year
-        if year < value:
-            raise serializers.ValidationError(
-                'Год создания произведения указан в будущем!'
-            )
-        return value
 
 
 class ReviewSerializer(serializers.ModelSerializer):

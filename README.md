@@ -1,5 +1,11 @@
 # api_yamdb
 
+### Разработчики:
+
+ - Шепилов Алексей (https://github.com/FoorsAlex)
+ - Мирошниченко Евгений (https://github.com/Eugenii1996)
+ - Владимир Ветров (https://github.com/VSVetrov)
+
 ### О проекте:
 
 Проект YaMDb представляет собой платформу по сбору отзывов пользователей на опубликованные произведения.
@@ -7,15 +13,15 @@
 Данные передаются в формате JSON.
 В реализации проекта применена архитектура REST API.
 Примененные библиотеки:
- requests 2.26.0
- django 2.2.16
- djangorestframework 3.12.4
- PyJWT 2.1.0
- pytest 6.2.4
- pytest-django 4.4.0
- pytest-pythonpath 0.7.3
- djangorestframework_simplejwt 5.1.0
- django-filter 21.1
+ - requests 2.26.0
+ - django 2.2.16
+ - djangorestframework 3.12.4
+ - PyJWT 2.1.0
+ - pytest 6.2.4
+ - pytest-django 4.4.0
+ - pytest-pythonpath 0.7.3
+ - djangorestframework_simplejwt 5.1.0
+ - django-filter 21.1
 
 ### Как наполнить базу данных:
 
