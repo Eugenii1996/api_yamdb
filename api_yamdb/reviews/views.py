@@ -1,18 +1,16 @@
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
-from django.http.request import QueryDict
 from django.shortcuts import get_object_or_404
-from rest_framework import filters, mixins, permissions, status, viewsets
-from rest_framework.authtoken.models import Token
+from rest_framework import filters, permissions, status, viewsets
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import generics
 from rest_framework_simplejwt.tokens import AccessToken
-from rest_framework_simplejwt.authentication import JWTAuthentication
+
 from reviews.permissions import IsAdmin, IsOwner
-from reviews.serializers import (CustomJWTSerializer, RegisterUserSerializer,
-                                 UsersMeSerializer, UsersSerializer)
+from reviews.serializers import (RegisterUserSerializer,
+                                 UsersMeSerializer, UsersSerializer, TokenSerializer)
 
 User = get_user_model()
 
@@ -34,11 +32,11 @@ class RegisterUserAPIView(generics.CreateAPIView):
     serializer_class = RegisterUserSerializer
 
     def post(self, request, *args, **kwargs):
-        if isinstance(request.data, QueryDict):
-            data = request.data.dict()
-        else:
-            data = request.data
-        user = User.objects.filter(username=data['username']).first()
+        data = request.data
+        serializer = RegisterUserSerializer(data=request.data)
+        if not data:
+            serializer.is_valid(raise_exception=True)
+        user = User.objects.filter(**data).first()
         serializer = self.serializer_class(data=data)
         if user:
             if user.confirmation_code:
@@ -49,11 +47,9 @@ class RegisterUserAPIView(generics.CreateAPIView):
             return Response('Код повторно выслан вам на почту',
                             status=status.HTTP_200_OK)
         serializer.is_valid(raise_exception=True)
-        confirmation_code = Token.generate_key()
-        send_confirmation_code(confirmation_code, data['email'])
-        User.objects.create(confirmation_code=confirmation_code,
-                            **data)
+        serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 
 class GetTokenAPIView(APIView):
@@ -62,7 +58,7 @@ class GetTokenAPIView(APIView):
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request):
-        serializer = CustomJWTSerializer(data=request.data)
+        serializer = TokenSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             user = get_object_or_404(
                 User, username=serializer.data['username'])
@@ -90,7 +86,7 @@ class UsersViewSet(viewsets.ModelViewSet):
 class UsersMeAPIView(APIView):
     """Обработка эндпоинта users/me/"""
 
-    permission_classes = (permissions.IsAuthenticated, IsOwner,)
+    permission_classes = (permissions.IsAuthenticated,)
 
     def get(self, request):
         user = get_object_or_404(User,
