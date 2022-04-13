@@ -27,7 +27,6 @@ INSTALLED_APPS = [
     'django_filters',
     'reviews',
     'api',
-    'users'
 ]
 
 MIDDLEWARE = [
@@ -109,7 +108,7 @@ STATIC_URL = '/static/'
 
 STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static/'),)
 
-AUTH_USER_MODEL = 'users.User'
+AUTH_USER_MODEL = 'reviews.User'
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
@@ -127,9 +126,9 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
-ROLE_CHOICES = (
+ROLE_CHOICES = [
     ('user', 'user'),
     ('moderator', 'moderator'),
     ('admin', 'admin'),
-)
+]
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

@@ -7,39 +7,52 @@ from rest_framework.authtoken.models import Token
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework import generics
 from rest_framework_simplejwt.tokens import AccessToken
-
-from .permissions import IsAdmin, IsOwner
-from .serializers import (CustomJWTSerializer, RegisterUserSerializer,
-                          UsersMeSerializer, UsersSerializer)
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from reviews.permissions import IsAdmin, IsOwner
+from reviews.serializers import (CustomJWTSerializer, RegisterUserSerializer,
+                                 UsersMeSerializer, UsersSerializer)
 
 User = get_user_model()
 
 
-class RegisterUserViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
+def send_confirmation_code(confirmation_code, email):
+    send_mail(
+        subject='Confirmation code',
+        message=f'Your confirmation code {confirmation_code}',
+        from_email='confirmationcode@mail.ru',
+        recipient_list=[email]
+    )
+
+
+class RegisterUserAPIView(generics.CreateAPIView):
     """Вьюсет, для регистрации пользователя и отправки смс с кодом"""
 
     queryset = User.objects.all()
     permission_classes = (permissions.AllowAny,)
     serializer_class = RegisterUserSerializer
 
-    def create(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         if isinstance(request.data, QueryDict):
             data = request.data.dict()
         else:
             data = request.data
+        user = User.objects.filter(username=data['username']).first()
         serializer = self.serializer_class(data=data)
+        if user:
+            if user.confirmation_code:
+                if 'Authorization' in request.headers:
+                    serializer.is_valid(raise_exception=True)
+                    return
+            send_confirmation_code(user.confirmation_code, data['email'])
+            return Response('Код повторно выслан вам на почту',
+                            status=status.HTTP_200_OK)
         serializer.is_valid(raise_exception=True)
         confirmation_code = Token.generate_key()
-        send_mail(
-            subject='Confirmation code',
-            message=f'Your confirmation code {confirmation_code}',
-            from_email='confirmationcode@mail.ru',
-            recipient_list=[data['email']]
-        )
+        send_confirmation_code(confirmation_code, data['email'])
         User.objects.create(confirmation_code=confirmation_code,
                             **data)
-        print(User.objects.filter(email=data['email']))
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
