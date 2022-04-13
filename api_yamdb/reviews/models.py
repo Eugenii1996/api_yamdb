@@ -3,7 +3,7 @@ import datetime as dt
 from django.core.exceptions import ValidationError
 from django.db import models
 from users.models import User
-
+from django.db.models import Avg
 
 def validate_year(value):
     year = dt.date.today().year
