@@ -1,11 +1,11 @@
 import datetime as dt
 
-from django.core.exceptions import ValidationError
-from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
-from django.db.models import UniqueConstraint
+from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db import models
+from django.db.models import UniqueConstraint
 
 
 class User(AbstractUser):
@@ -93,7 +93,7 @@ class Title(models.Model):
     )
 
     class Meta:
-        ordering = ['-year', 'name', 'category']
+        ordering = ['-year', 'category', 'name']
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
 
@@ -126,8 +126,6 @@ class Review(ReviewComment):
     )
     score = models.IntegerField(
         default=0,
-        null=True,
-        blank=True,
         validators=(
             MinValueValidator(1),
             MaxValueValidator(10)
@@ -136,6 +134,7 @@ class Review(ReviewComment):
     )
 
     class Meta:
+        ordering = ['pub_date']
         constraints = [
             models.UniqueConstraint(
                 fields=['author', 'title'],

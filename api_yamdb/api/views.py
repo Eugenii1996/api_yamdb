@@ -1,3 +1,4 @@
+from unittest.util import sorted_list_difference
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, viewsets
@@ -43,9 +44,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         return self.get_review().comments.all()
 
     def perform_create(self, serializer):
-        review = get_object_or_404(Review, id=self.kwargs.get('review_id'),
-                                   title=self.kwargs.get('title_id'))
-        serializer.save(author=self.request.user, review=review)
+        serializer.save(author=self.request.user, review=self.get_review())
 
 
 class CategoryGenreViewSet(CreateGetDeleteViewSet):
@@ -69,12 +68,13 @@ class GenreViewSet(CategoryGenreViewSet):
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all().annotate(
         rating=Avg('reviews__score')
-    ).order_by('-year', 'name', 'category')
+    )
     serializer_class = TitleSerializer
     permission_classes = (AdminOrReadOnly,)
-    filter_backends = (DjangoFilterBackend,)
+    filter_backends = (DjangoFilterBackend, filters.OrderingFilter)
     pagination_class = LimitOffsetPagination
     filterset_class = TitleFilter
+    ordering = ('-year', 'name', 'category')
 
     def get_serializer_class(self):
         if self.action == 'list' or self.action == 'retrieve':

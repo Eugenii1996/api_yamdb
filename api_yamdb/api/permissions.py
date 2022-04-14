@@ -1,4 +1,3 @@
-from django.contrib.auth.models import AnonymousUser
 from rest_framework.permissions import SAFE_METHODS, BasePermission
 
 
@@ -22,7 +21,7 @@ class IsAdminOrModeratorOrOwnerOrReadOnly(BasePermission):
 class AdminOrReadOnly(BasePermission):
     def has_permission(self, request, view):
         user = request.user
-        if user != AnonymousUser():
+        if request.user.is_authenticated:
             return (
                 user.is_admin()
             )
