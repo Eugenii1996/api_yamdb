@@ -26,3 +26,10 @@ class AdminOrReadOnly(BasePermission):
                 user.is_admin()
             )
         return request.method in SAFE_METHODS
+
+
+class IsAdmin(BasePermission):
+    """Права только у админа"""
+
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.is_admin()

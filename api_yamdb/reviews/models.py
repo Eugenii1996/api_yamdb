@@ -20,7 +20,7 @@ class User(AbstractUser):
     bio = models.TextField(blank=True,
                            null=True)
     role = models.TextField(choices=settings.ROLE_CHOICES,
-                            default=settings.ROLE_CHOICES[0][0],
+                            default=settings.USER,
                             blank=True,
                             null=False)
     confirmation_code = models.TextField()
@@ -28,16 +28,11 @@ class User(AbstractUser):
     REQUIRED_FIELDS = ['email']
 
     def is_admin(self):
-        if (self.role == settings.ROLE_CHOICES[2][0]
-                or self.is_superuser):
-            return True
-        return False
+        return (self.role == settings.ADMIN
+                or self.is_superuser or self.is_staff)
 
     def is_moderator(self):
-        if (self.role == settings.ROLE_CHOICES[1][0]
-                or self.is_superuser):
-            return True
-        return False
+        return self.role == settings.MODERATOR
 
     def __str__(self):
         return self.username

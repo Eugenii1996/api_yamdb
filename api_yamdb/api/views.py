@@ -1,17 +1,30 @@
-from unittest.util import sorted_list_difference
+from django.contrib.auth import get_user_model
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.core.mail import send_mail
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, viewsets
-from rest_framework.pagination import LimitOffsetPagination
-from django.db.models import Avg
+from rest_framework import filters, generics, permissions, status, viewsets
+from rest_framework.authtoken.models import Token
+from rest_framework.pagination import (LimitOffsetPagination,
+                                       PageNumberPagination)
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import AccessToken
+from reviews.models import Category, Comment, Genre, Review, Title
 
 from .filters import TitleFilter
-from .permissions import (AdminOrReadOnly, IsAdminOrModeratorOrOwnerOrReadOnly)
+from .permissions import (AdminOrReadOnly, IsAdmin,
+                          IsAdminOrModeratorOrOwnerOrReadOnly)
 from .serializers import (CategorySerializer, CommentSerializer,
-                          GenreSerializer, ReviewSerializer,
-                          TitleListSerializer, TitleSerializer)
+                          GenreSerializer, RegisterUserSerializer,
+                          ReviewSerializer, TitleListSerializer,
+                          TitleSerializer, TokenSerializer, UsersMeSerializer,
+                          UsersSerializer)
 from .viewsets import CreateGetDeleteViewSet
-from reviews.models import Category, Comment, Genre, Review, Title
+
+codegen = PasswordResetTokenGenerator()
+User = get_user_model()
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -80,3 +93,92 @@ class TitleViewSet(viewsets.ModelViewSet):
         if self.action == 'list' or self.action == 'retrieve':
             return TitleListSerializer
         return TitleSerializer
+
+
+def send_confirmation_code(confirmation_code, email):
+    send_mail(
+        subject='Confirmation code',
+        message=f'Your confirmation code {confirmation_code}',
+        from_email='confirmationcode@mail.ru',
+        recipient_list=[email]
+    )
+
+
+class RegisterUserAPIView(generics.CreateAPIView):
+    """Вьюсет, для регистрации пользователя и отправки смс с кодом"""
+
+    queryset = User.objects.all()
+    permission_classes = (permissions.AllowAny,)
+    serializer_class = RegisterUserSerializer
+
+    def post(self, request, *args, **kwargs):
+        data = request.data
+        serializer = RegisterUserSerializer(data=data)
+        confirmation_code = Token.generate_key()
+        user = User.objects.filter(**data).first()
+        if user:
+            confirmation_code = user.confirmation_code
+            send_confirmation_code(confirmation_code,
+                                   email=serializer.validated_data['email'])
+            return Response(data, status=status.HTTP_200_OK)
+        else:
+            serializer.is_valid(raise_exception=True)
+            User.objects.create(**serializer.validated_data,
+                                confirmation_code=confirmation_code)
+        send_confirmation_code(confirmation_code,
+                               email=serializer.validated_data['email'])
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class GetTokenAPIView(APIView):
+    permission_classes = (permissions.AllowAny,)
+
+    def post(self, request):
+        serializer = TokenSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        confirmation_code = serializer.validated_data.get('confirmation_code')
+        username = serializer.validated_data.get('username')
+        user = get_object_or_404(User, username=username)
+
+        if codegen.check_token(user, confirmation_code):
+            token = AccessToken.for_user(user)
+            return Response({'token': f'{token}'}, status=status.HTTP_200_OK)
+
+        return Response(
+            {'confirmation_code': ['Код не действителен!']},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+
+class UsersViewSet(viewsets.ModelViewSet):
+    """Вьюсет для эндпоинта /users/"""
+
+    queryset = User.objects.all()
+    permission_classes = (permissions.IsAuthenticated, IsAdmin)
+    serializer_class = UsersSerializer
+    pagination_class = PageNumberPagination
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('username',)
+    lookup_field = 'username'
+
+
+class UsersMeAPIView(APIView):
+    """Обработка эндпоинта users/me/"""
+
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request):
+        user = get_object_or_404(User,
+                                 username=request.user)
+        serializer = UsersMeSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def patch(self, request):
+        user = get_object_or_404(User,
+                                 username=request.user)
+        serializer = UsersMeSerializer(user,
+                                       data=request.data,
+                                       partial=True)
+        serializer.is_valid()
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)

@@ -131,4 +131,7 @@ ROLE_CHOICES = [
     ('moderator', 'moderator'),
     ('admin', 'admin'),
 ]
+USER = 'user'
+MODERATOR = 'moderator'
+ADMIN = 'admin'
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
