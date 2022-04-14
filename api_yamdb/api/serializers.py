@@ -4,7 +4,6 @@ from rest_framework.exceptions import ValidationError
 from reviews.models import Category, Comment, Genre, Review, Title
 
 
-
 class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -56,20 +55,16 @@ class TitleSerializer(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-    title = serializers.SlugRelatedField(
-        slug_field='name',
-        read_only=True
-    )
     author = serializers.SlugRelatedField(
         read_only=True, slug_field='username'
     )
 
     def validate(self, data):
         request = self.context['request']
-        author = request.user
-        title_id = self.context['view'].kwargs.get('title_id')
-        title = get_object_or_404(Title, pk=title_id)
         if request.method == 'POST':
+            author = request.user
+            title_id = self.context['view'].kwargs.get('title_id')
+            title = get_object_or_404(Title, pk=title_id)
             if Review.objects.filter(title=title, author=author).exists():
                 raise ValidationError('Вы не можете добавить более'
                                       'одного отзыва на произведение')
@@ -77,18 +72,14 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Review
-        fields = '__all__'
+        fields = ('id', 'text', 'author', 'score', 'pub_date')
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    review = serializers.SlugRelatedField(
-        slug_field='text',
-        read_only=True
-    )
     author = serializers.SlugRelatedField(
         read_only=True, slug_field='username'
     )
 
     class Meta:
         model = Comment
-        fields = '__all__'
+        fields = ('id', 'text', 'author', 'pub_date')

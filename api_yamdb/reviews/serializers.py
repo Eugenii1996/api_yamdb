@@ -1,10 +1,10 @@
-from django.conf import settings
+import re
+
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from rest_framework import serializers
 from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.authtoken.models import Token
-import re
 
 User = get_user_model()
 

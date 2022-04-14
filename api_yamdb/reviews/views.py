@@ -8,9 +8,11 @@ from rest_framework.views import APIView
 from rest_framework import generics
 from rest_framework_simplejwt.tokens import AccessToken
 
-from reviews.permissions import IsAdmin, IsOwner
+from reviews.permissions import IsAdmin
 from reviews.serializers import (RegisterUserSerializer,
-                                 UsersMeSerializer, UsersSerializer, TokenSerializer)
+                                 UsersMeSerializer,
+                                 UsersSerializer,
+                                 TokenSerializer)
 
 User = get_user_model()
 
@@ -49,7 +51,6 @@ class RegisterUserAPIView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
-
 
 
 class GetTokenAPIView(APIView):

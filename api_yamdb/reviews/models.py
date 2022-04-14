@@ -5,6 +5,7 @@ from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db.models import UniqueConstraint
+from django.core.validators import MaxValueValidator, MinValueValidator
 
 
 class User(AbstractUser):
@@ -27,14 +28,14 @@ class User(AbstractUser):
     REQUIRED_FIELDS = ['email']
 
     def is_admin(self):
-        if (self.role == settings.ROLE_CHOICES[2][0] or
-                self.is_superuser):
+        if (self.role == settings.ROLE_CHOICES[2][0]
+                or self.is_superuser):
             return True
         return False
 
     def is_moderator(self):
-        if (self.role == settings.ROLE_CHOICES[1][0] or
-                self.is_superuser):
+        if (self.role == settings.ROLE_CHOICES[1][0]
+                or self.is_superuser):
             return True
         return False
 
@@ -105,27 +106,36 @@ class ReviewComment(models.Model):
         User,
         on_delete=models.CASCADE,
         related_name='%(class)ss',
-        related_query_name='%(class)s',
+        related_query_name='%(class)s'
     )
     text = models.TextField()
     pub_date = models.DateTimeField(
-        auto_now_add=True, db_index=True
-    )
+        'Дата добавления', auto_now_add=True, db_index=True)
 
     class Meta:
         abstract = True
+        ordering = ['pub_date']
 
 
 class Review(ReviewComment):
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
-        related_name='reviews'
+        related_name='reviews',
+        verbose_name='Произведение'
     )
-    score = models.IntegerField(default=0, null=True, blank=True)
+    score = models.IntegerField(
+        default=0,
+        null=True,
+        blank=True,
+        validators=(
+            MinValueValidator(1),
+            MaxValueValidator(10)
+        ),
+        error_messages={'validators': 'Оценка от 1 до 10!'}
+    )
 
     class Meta:
-        ordering = ['pub_date']
         constraints = [
             models.UniqueConstraint(
                 fields=['author', 'title'],
@@ -136,9 +146,5 @@ class Review(ReviewComment):
 
 class Comment(ReviewComment):
     review = models.ForeignKey(
-        Review, on_delete=models.CASCADE,
-        related_name='comments'
+        Review, on_delete=models.CASCADE, related_name='comments'
     )
-
-    class Meta:
-        ordering = ['pub_date']
