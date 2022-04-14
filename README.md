@@ -2,9 +2,9 @@
 
 ### Разработчики:
 
- - Шепилов Алексей (https://github.com/FoorsAlex)
- - Мирошниченко Евгений (https://github.com/Eugenii1996)
- - Владимир Ветров (https://github.com/VSVetrov)
+ - [Шепилов Алексей](https://github.com/FoorsAlex)
+ - [Мирошниченко Евгений](https://github.com/Eugenii1996)
+ - [Владимир Ветров](https://github.com/VSVetrov)
 
 ### О проекте:
 
@@ -80,73 +80,4 @@ python manage.py migrate
 python manage.py runserver
 ```
 
-### Примеры запросов к API:
-
 Описание API доступно по ссылке http://127.0.0.1:8000/redoc/ при запуске сервера разработчика
-
-POST-запрос на эндпоинт api/v1/titles/:
-
-```
-{
-    "name": "string",
-    "year": 0,
-    "description": "string",
-    "genre": [
-        "string"
-    ],
-    "category": "string"
-}
-```
-
-Ответ:
-
-```
-{
-    "id": 0,
-    "name": "string",
-    "year": 0,
-    "rating": 0,
-    "description": "string",
-    "genre": [
-    {
-        "name": "string",
-        "slug": "string"
-    }
-    ],
-    "category": {
-        "name": "string",
-        "slug": "string"
-    }
-}
-```
-
-GET-запрос на эндпоинт /api/v1/titles/ вернет список произведений:
-
-```
-[
-    {
-        "count": 0,
-        "next": "string",
-        "previous": "string",
-        "results": [
-            {
-                "id": 0,
-                "name": "string",
-                "year": 0,
-                "rating": 0,
-                "description": "string",
-                "genre": [
-                    {
-                    "name": "string",
-                    "slug": "string"
-                    }
-                ],
-                "category": {
-                    "name": "string",
-                    "slug": "string"
-                }
-            }
-        ]
-    }
-]
-```
