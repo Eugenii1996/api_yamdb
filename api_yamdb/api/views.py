@@ -1,6 +1,5 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
-from django.core.mail import send_mail
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -11,7 +10,6 @@ from rest_framework.pagination import (LimitOffsetPagination,
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import AccessToken
-from reviews.models import Category, Comment, Genre, Review, Title
 
 from .filters import TitleFilter
 from .permissions import (AdminOrReadOnly, IsAdmin,
@@ -21,14 +19,15 @@ from .serializers import (CategorySerializer, CommentSerializer,
                           ReviewSerializer, TitleListSerializer,
                           TitleSerializer, TokenSerializer, UsersMeSerializer,
                           UsersSerializer)
+from .utils import send_confirmation_code
 from .viewsets import CreateGetDeleteViewSet
+from reviews.models import Category, Comment, Genre, Review, Title
 
 codegen = PasswordResetTokenGenerator()
 User = get_user_model()
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
-    queryset = Review.objects.all()
     serializer_class = ReviewSerializer
     permission_classes = (IsAdminOrModeratorOrOwnerOrReadOnly,)
     pagination_class = LimitOffsetPagination
@@ -44,7 +43,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 
 class CommentViewSet(viewsets.ModelViewSet):
-    queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     permission_classes = (IsAdminOrModeratorOrOwnerOrReadOnly,)
     pagination_class = LimitOffsetPagination
@@ -93,15 +91,6 @@ class TitleViewSet(viewsets.ModelViewSet):
         if self.action == 'list' or self.action == 'retrieve':
             return TitleListSerializer
         return TitleSerializer
-
-
-def send_confirmation_code(confirmation_code, email):
-    send_mail(
-        subject='Confirmation code',
-        message=f'Your confirmation code {confirmation_code}',
-        from_email='confirmationcode@mail.ru',
-        recipient_list=[email]
-    )
 
 
 class RegisterUserAPIView(generics.CreateAPIView):

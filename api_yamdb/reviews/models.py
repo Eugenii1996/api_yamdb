@@ -1,11 +1,10 @@
-import datetime as dt
-
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
-from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import UniqueConstraint
+
+from .validators import validate_year
 
 
 class User(AbstractUser):
@@ -41,15 +40,6 @@ class User(AbstractUser):
         constraints = [UniqueConstraint(fields=['username', 'email'],
                                         name='unique_booking')]
         ordering = ['username']
-
-
-def validate_year(value):
-    year = dt.date.today().year
-    if year < value:
-        raise ValidationError(
-            'Год создания произведения указан в будущем!',
-            params={'value': value},
-        )
 
 
 class CategoryGenre(models.Model):

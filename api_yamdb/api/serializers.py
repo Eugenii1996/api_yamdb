@@ -1,7 +1,6 @@
 import re
 
 from django.contrib.auth import get_user_model
-from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -14,14 +13,14 @@ class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Category
-        fields = ('name', 'slug')
+        exclude = ('id',)
 
 
 class GenreSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Genre
-        fields = ('name', 'slug')
+        exclude = ('id',)
 
 
 class TitleListSerializer(serializers.ModelSerializer):
@@ -87,15 +86,6 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = ('id', 'text', 'author', 'pub_date')
-
-
-def send_confirmation_code(confirmation_code, email):
-    send_mail(
-        subject='Confirmation code',
-        message=f'Your confirmation code {confirmation_code}',
-        from_email='confirmationcode@mail.ru',
-        recipient_list=[email]
-    )
 
 
 class RegisterUserSerializer(serializers.Serializer):
