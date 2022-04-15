@@ -88,6 +88,7 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
         fields = ('id', 'text', 'author', 'pub_date')
 
+
 def send_confirmation_code(confirmation_code, email):
     send_mail(
         subject='Confirmation code',
