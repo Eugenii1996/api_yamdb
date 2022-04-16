@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.db.models import Avg
+from rest_framework.decorators import action
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, generics, permissions, status, viewsets
@@ -21,7 +22,7 @@ from .serializers import (CategorySerializer, CommentSerializer,
                           UsersSerializer)
 from .utils import send_confirmation_code
 from .viewsets import CreateGetDeleteViewSet
-from reviews.models import Category, Comment, Genre, Review, Title
+from reviews.models import Category, Genre, Review, Title
 
 codegen = PasswordResetTokenGenerator()
 User = get_user_model()
@@ -107,16 +108,13 @@ class RegisterUserAPIView(generics.CreateAPIView):
         user = User.objects.filter(**data).first()
         if user:
             confirmation_code = user.confirmation_code
-            send_confirmation_code(confirmation_code,
-                                   email=serializer.validated_data['email'])
-            return Response(data, status=status.HTTP_200_OK)
         else:
             serializer.is_valid(raise_exception=True)
             User.objects.create(**serializer.validated_data,
                                 confirmation_code=confirmation_code)
         send_confirmation_code(confirmation_code,
                                email=serializer.validated_data['email'])
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(data, status=status.HTTP_200_OK)
 
 
 class GetTokenAPIView(APIView):
@@ -150,24 +148,15 @@ class UsersViewSet(viewsets.ModelViewSet):
     search_fields = ('username',)
     lookup_field = 'username'
 
-
-class UsersMeAPIView(APIView):
-    """Обработка эндпоинта users/me/"""
-
-    permission_classes = (permissions.IsAuthenticated,)
-
-    def get(self, request):
-        user = get_object_or_404(User,
-                                 username=request.user)
-        serializer = UsersMeSerializer(user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def patch(self, request):
-        user = get_object_or_404(User,
-                                 username=request.user)
-        serializer = UsersMeSerializer(user,
+    @action(detail=False, methods=['GET', 'PATCH'],
+            permission_classes=[permissions.IsAuthenticated])
+    def me(self, request):
+        if request.method == 'GET':
+            serializer = UsersMeSerializer(request.user)
+            return Response(serializer.data)
+        serializer = UsersMeSerializer(request.user,
                                        data=request.data,
                                        partial=True)
         serializer.is_valid()
         serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.data)
